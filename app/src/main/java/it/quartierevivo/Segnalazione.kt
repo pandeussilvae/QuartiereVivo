@@ -7,5 +7,8 @@ data class Segnalazione(
     val descrizione: String,
     val categoria: String,
     val fotoUri: Uri?,
-    val posizione: String?
+    val latitudine: Double,
+    val longitudine: Double,
+    val risolta: Boolean = false,
+    val posizione: String? = null
 )
