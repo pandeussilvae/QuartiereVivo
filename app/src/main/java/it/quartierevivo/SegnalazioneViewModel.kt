@@ -1,6 +1,7 @@
 package it.quartierevivo
 
 import android.net.Uri
+import com.google.android.gms.maps.model.LatLng
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -15,7 +16,9 @@ class SegnalazioneViewModel : ViewModel() {
         private set
     var fotoUri by mutableStateOf<Uri?>(null)
         private set
-    var posizione by mutableStateOf<String?>(null)
+    var posizione by mutableStateOf<LatLng?>(null)
+        private set
+    var dataInvio by mutableStateOf("")
         private set
     var invioConfermato by mutableStateOf(false)
         private set
@@ -24,10 +27,12 @@ class SegnalazioneViewModel : ViewModel() {
     fun onDescrizioneChange(value: String) { descrizione = value }
     fun onCategoriaChange(value: String) { categoria = value }
     fun onFotoChange(uri: Uri?) { fotoUri = uri }
-    fun onPosizioneChange(value: String?) { posizione = value }
+    fun onPosizioneChange(value: LatLng?) { posizione = value }
+    fun onDataInvioChange(value: String) { dataInvio = value }
 
     fun inviaSegnalazione() {
         // Placeholder for actual send logic (e.g., Firebase)
+        dataInvio = java.text.SimpleDateFormat("dd/MM/yyyy").format(java.util.Date())
         invioConfermato = true
     }
 

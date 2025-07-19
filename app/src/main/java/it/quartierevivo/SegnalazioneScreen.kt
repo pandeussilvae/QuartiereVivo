@@ -3,6 +3,7 @@ package it.quartierevivo
 import android.Manifest
 import android.net.Uri
 import android.widget.Toast
+import com.google.android.gms.maps.model.LatLng
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -50,8 +51,8 @@ fun SegnalazioneScreen(viewModel: SegnalazioneViewModel = viewModel()) {
 
     val locationPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (granted) {
-            // Placeholder for real GPS retrieval
-            viewModel.onPosizioneChange("Lat:0, Lng:0")
+            // Placeholder per il recupero reale della posizione
+            viewModel.onPosizioneChange(LatLng(0.0, 0.0))
         } else {
             Toast.makeText(context, "Permesso posizione negato", Toast.LENGTH_SHORT).show()
         }

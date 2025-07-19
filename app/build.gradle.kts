@@ -58,6 +58,9 @@ dependencies {
     implementation("androidx.compose.ui:ui:1.5.1")
     implementation("androidx.compose.ui:ui-tooling-preview:1.5.1")
     implementation("androidx.compose.material3:material3:1.1.0")
+    implementation("com.google.android.gms:play-services-maps:18.1.0")
+    implementation("com.google.maps.android:maps-compose:6.6.0")
+    implementation("io.coil-kt:coil-compose:3.2.0")
 
     debugImplementation("androidx.compose.ui:ui-tooling:1.5.1")
 }
