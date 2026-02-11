@@ -1,0 +1,32 @@
+<resources>
+    <string name="app_name">QuartiereVivo</string>
+    <string name="filter_category">Categoria</string>
+    <string name="filter_all">Tutte</string>
+    <string name="details">Dettagli</string>
+    <string name="home">Home</string>
+    <string name="filters">Filtri</string>
+    <string name="logout">Logout</string>
+    <string name="my_location">La mia posizione</string>
+    <string name="camera_permission_denied">Permesso fotocamera negato</string>
+    <string name="location_permission_denied">Permesso posizione negato</string>
+    <string name="report_sent">Segnalazione inviata</string>
+    <string name="title">Titolo</string>
+    <string name="description">Descrizione</string>
+    <string name="category">Categoria</string>
+    <string name="select_photo">Seleziona foto</string>
+    <string name="get_location">Ottieni posizione</string>
+    <string name="send">Invia</string>
+    <string name="privacy_terms">Privacy e termini</string>
+    <string name="open_privacy_terms">Apri privacy e termini</string>
+    <string name="back">Indietro</string>
+    <string name="privacy_screen_title">Privacy e termini di utilizzo</string>
+    <string name="privacy_body">Trattiamo i tuoi dati esclusivamente per gestire le segnalazioni del quartiere, migliorare i servizi locali e garantire la sicurezza dell'app. Proseguendo accetti il trattamento dei dati secondo la normativa vigente e i termini di utilizzo di QuartiereVivo.</string>
+    <string name="report_category_maintenance">Manutenzione</string>
+    <string name="report_category_safety">Sicurezza</string>
+    <string name="report_category_other">Altro</string>
+    <string name="sample_report_light">Guasto illuminazione</string>
+    <string name="sample_report_waste">Rifiuti abbandonati</string>
+    <string name="sample_report_danger">Area pericolosa</string>
+    <string name="send_report">Invia segnalazione</string>
+    <string name="open_report_form">Apri form segnalazione</string>
+</resources>

@@ -7,12 +7,13 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Policy
+import androidx.compose.material.icons.filled.Report
 import androidx.compose.material3.Button
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -30,6 +31,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.ImageLoader
@@ -58,13 +60,18 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.ui.res.painterResource
+import com.google.firebase.crashlytics.ktx.crashlytics
+import com.google.firebase.ktx.Firebase
 import it.quartierevivo.ui.theme.VerdeOliva
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MappaSegnalazioniScreen(
-    viewModel: MappaSegnalazioniViewModel = viewModel()
+    viewModel: MappaSegnalazioniViewModel = viewModel(),
+    onOpenReportForm: () -> Unit = {},
+    onOpenPrivacy: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val segnalazioni by viewModel.segnalazioniFiltrate.collectAsState()
@@ -88,7 +95,7 @@ fun MappaSegnalazioniScreen(
     val uiSettings = remember {
         MapUiSettings(myLocationButtonEnabled = false, zoomControlsEnabled = false)
     }
-    val properties = remember {
+    val properties = remember(myLocation) {
         MapProperties(isMyLocationEnabled = myLocation != null)
     }
 
@@ -111,8 +118,8 @@ fun MappaSegnalazioniScreen(
                         Column(Modifier.padding(8.dp)) {
                             Text(text = item.titolo)
                             Spacer(Modifier.height(4.dp))
-                            Button(onClick = { /* TODO dettagli */ }) {
-                                Text("Dettagli")
+                            Button(onClick = { viewModel.tracciaAperturaDettaglio(item.id) }) {
+                                Text(stringResource(R.string.details))
                             }
                         }
                     }
@@ -125,12 +132,12 @@ fun MappaSegnalazioniScreen(
                         value = viewModel.categoriaFiltro.collectAsState().value ?: "",
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("Categoria") },
+                        label = { Text(stringResource(R.string.filter_category)) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
                         modifier = Modifier.menuAnchor()
                     )
                     androidx.compose.material3.ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-                        DropdownMenuItem(text = { Text("Tutte") }, onClick = {
+                        DropdownMenuItem(text = { Text(stringResource(R.string.filter_all)) }, onClick = {
                             viewModel.setCategoriaFiltro(null)
                             expanded = false
                         })
@@ -144,15 +151,27 @@ fun MappaSegnalazioniScreen(
                 }
             }
 
-            Row(modifier = Modifier.align(Alignment.BottomCenter).padding(8.dp)) {
-                IconButton(onClick = { /* Home */ }) {
-                    Icon(Icons.Default.Home, contentDescription = "Home", tint = VerdeOliva)
-                }
-                IconButton(onClick = { expanded = !expanded }) {
-                    Icon(Icons.Default.FilterList, contentDescription = "Filtri", tint = VerdeOliva)
-                }
-                IconButton(onClick = { /* Logout */ }) {
-                    Icon(Icons.Default.ExitToApp, contentDescription = "Logout", tint = VerdeOliva)
+            Surface(
+                color = VerdeOliva,
+                shape = CircleShape,
+                modifier = Modifier.align(Alignment.BottomCenter).padding(8.dp)
+            ) {
+                Row(modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)) {
+                    IconButton(onClick = { /* Home */ }) {
+                        Icon(Icons.Default.Home, contentDescription = stringResource(R.string.home), tint = Color.White)
+                    }
+                    IconButton(onClick = onOpenReportForm) {
+                        Icon(Icons.Default.Report, contentDescription = stringResource(R.string.open_report_form), tint = Color.White)
+                    }
+                    IconButton(onClick = { expanded = !expanded }) {
+                        Icon(Icons.Default.FilterList, contentDescription = stringResource(R.string.filters), tint = Color.White)
+                    }
+                    IconButton(onClick = onOpenPrivacy) {
+                        Icon(Icons.Default.Policy, contentDescription = stringResource(R.string.open_privacy_terms), tint = Color.White)
+                    }
+                    IconButton(onClick = { /* Logout */ }) {
+                        Icon(Icons.Default.ExitToApp, contentDescription = stringResource(R.string.logout), tint = Color.White)
+                    }
                 }
             }
 
@@ -166,7 +185,9 @@ fun MappaSegnalazioniScreen(
                                 myLocation = LatLng(location.latitude, location.longitude)
                                 cameraPositionState.position = cameraPositionState.position.copy(target = myLocation!!)
                             }
-                        } catch (_: Exception) {}
+                        } catch (exception: Exception) {
+                            Firebase.crashlytics.recordException(exception)
+                        }
                     }
                 },
                 modifier = Modifier
@@ -175,7 +196,11 @@ fun MappaSegnalazioniScreen(
                 containerColor = VerdeOliva,
                 shape = CircleShape
             ) {
-                Icon(painterResource(android.R.drawable.ic_menu_mylocation), contentDescription = "My Location", tint = Color.White)
+                Icon(
+                    painterResource(android.R.drawable.ic_menu_mylocation),
+                    contentDescription = stringResource(R.string.my_location),
+                    tint = Color.White
+                )
             }
         }
     }

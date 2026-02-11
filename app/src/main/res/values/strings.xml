@@ -1,0 +1,32 @@
+<resources>
+    <string name="app_name">QuartiereVivo</string>
+    <string name="filter_category">Category</string>
+    <string name="filter_all">All</string>
+    <string name="details">Details</string>
+    <string name="home">Home</string>
+    <string name="filters">Filters</string>
+    <string name="logout">Logout</string>
+    <string name="my_location">My location</string>
+    <string name="camera_permission_denied">Camera permission denied</string>
+    <string name="location_permission_denied">Location permission denied</string>
+    <string name="report_sent">Report sent</string>
+    <string name="title">Title</string>
+    <string name="description">Description</string>
+    <string name="category">Category</string>
+    <string name="select_photo">Select photo</string>
+    <string name="get_location">Get location</string>
+    <string name="send">Send</string>
+    <string name="privacy_terms">Privacy &amp; Terms</string>
+    <string name="open_privacy_terms">Open privacy and terms</string>
+    <string name="back">Back</string>
+    <string name="privacy_screen_title">Privacy and terms of use</string>
+    <string name="privacy_body">We process your data only to manage neighborhood reports, improve local services, and ensure app security. By continuing, you agree to the processing of your data according to current regulations and the terms of use of QuartiereVivo.</string>
+    <string name="report_category_maintenance">Maintenance</string>
+    <string name="report_category_safety">Safety</string>
+    <string name="report_category_other">Other</string>
+    <string name="sample_report_light">Lighting issue</string>
+    <string name="sample_report_waste">Abandoned waste</string>
+    <string name="sample_report_danger">Unsafe area</string>
+    <string name="send_report">Send report</string>
+    <string name="open_report_form">Open report form</string>
+</resources>
