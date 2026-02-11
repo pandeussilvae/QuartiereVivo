@@ -27,6 +27,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 
@@ -44,7 +45,7 @@ fun SegnalazioneScreen(viewModel: SegnalazioneViewModel = viewModel()) {
         if (granted) {
             photoLauncher.launch("image/*")
         } else {
-            Toast.makeText(context, "Permesso fotocamera negato", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, context.getString(R.string.camera_permission_denied), Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -53,19 +54,23 @@ fun SegnalazioneScreen(viewModel: SegnalazioneViewModel = viewModel()) {
             // Placeholder for real GPS retrieval
             viewModel.onPosizioneChange("Lat:0, Lng:0")
         } else {
-            Toast.makeText(context, "Permesso posizione negato", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, context.getString(R.string.location_permission_denied), Toast.LENGTH_SHORT).show()
         }
     }
 
     LaunchedEffect(viewModel.invioConfermato) {
         if (viewModel.invioConfermato) {
-            snackbarHostState.showSnackbar("Segnalazione inviata")
+            snackbarHostState.showSnackbar(context.getString(R.string.report_sent))
             viewModel.resetConferma()
         }
     }
 
     var expanded by remember { mutableStateOf(false) }
-    val categorie = listOf("Manutenzione", "Sicurezza", "Altro")
+    val categorie = listOf(
+        stringResource(R.string.report_category_maintenance),
+        stringResource(R.string.report_category_safety),
+        stringResource(R.string.report_category_other)
+    )
 
     Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) }) { paddingValues ->
         Column(
@@ -77,13 +82,13 @@ fun SegnalazioneScreen(viewModel: SegnalazioneViewModel = viewModel()) {
             OutlinedTextField(
                 value = viewModel.titolo,
                 onValueChange = viewModel::onTitoloChange,
-                label = { Text("Titolo") },
+                label = { Text(stringResource(R.string.title)) },
                 modifier = Modifier.fillMaxWidth()
             )
             OutlinedTextField(
                 value = viewModel.descrizione,
                 onValueChange = viewModel::onDescrizioneChange,
-                label = { Text("Descrizione") },
+                label = { Text(stringResource(R.string.description)) },
                 modifier = Modifier.fillMaxWidth()
             )
             ExposedDropdownMenuBox(
@@ -94,7 +99,7 @@ fun SegnalazioneScreen(viewModel: SegnalazioneViewModel = viewModel()) {
                     value = viewModel.categoria,
                     onValueChange = {},
                     readOnly = true,
-                    label = { Text("Categoria") },
+                    label = { Text(stringResource(R.string.category)) },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                     modifier = Modifier.menuAnchor().fillMaxWidth()
                 )
@@ -116,15 +121,15 @@ fun SegnalazioneScreen(viewModel: SegnalazioneViewModel = viewModel()) {
             Button(onClick = {
                 cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
             }) {
-                Text("Seleziona foto")
+                Text(stringResource(R.string.select_photo))
             }
             Button(onClick = {
                 locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
             }) {
-                Text("Ottieni posizione")
+                Text(stringResource(R.string.get_location))
             }
             Button(onClick = { viewModel.inviaSegnalazione() }) {
-                Text("Invia")
+                Text(stringResource(R.string.send))
             }
         }
     }
