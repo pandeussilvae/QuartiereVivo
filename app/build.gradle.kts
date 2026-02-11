@@ -18,12 +18,23 @@ android {
     }
 
     buildTypes {
+        getByName("debug") {
+            manifestPlaceholders["MAPS_API_KEY"] =
+                (project.findProperty("MAPS_API_KEY_DEBUG") as String?)
+                    ?: (project.findProperty("MAPS_API_KEY") as String?)
+                    ?: ""
+        }
+
         getByName("release") {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            manifestPlaceholders["MAPS_API_KEY"] =
+                (project.findProperty("MAPS_API_KEY_RELEASE") as String?)
+                    ?: (project.findProperty("MAPS_API_KEY") as String?)
+                    ?: ""
         }
     }
 

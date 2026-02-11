@@ -2,3 +2,9 @@
 /.gradle/
 /local.properties
 **/build/
+
+# Firebase / Google keys
+app/google-services.json
+app/src/debug/google-services.json
+app/src/release/google-services.json
+secrets.properties
