@@ -82,6 +82,8 @@ import kotlinx.coroutines.tasks.await
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MappaSegnalazioniScreen(
+    viewModel: MappaSegnalazioniViewModel = viewModel(),
+    onLogoutClick: () -> Unit = {}
     viewModel: MappaSegnalazioniViewModel,
     viewModel: MappaSegnalazioniViewModel = viewModel(),
     onOpenReportForm: () -> Unit = {},
@@ -181,6 +183,15 @@ fun MappaSegnalazioniScreen(
                 }
             }
 
+            Row(modifier = Modifier.align(Alignment.BottomCenter).padding(8.dp)) {
+                IconButton(onClick = { /* Home */ }) {
+                    Icon(Icons.Default.Home, contentDescription = "Home", tint = VerdeOliva)
+                }
+                IconButton(onClick = { expanded = !expanded }) {
+                    Icon(Icons.Default.FilterList, contentDescription = "Filtri", tint = VerdeOliva)
+                }
+                IconButton(onClick = onLogoutClick) {
+                    Icon(Icons.Default.ExitToApp, contentDescription = "Logout", tint = VerdeOliva)
             Surface(
                 color = VerdeOliva,
                 shape = CircleShape,
