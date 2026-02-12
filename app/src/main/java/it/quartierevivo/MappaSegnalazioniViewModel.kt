@@ -1,5 +1,10 @@
 package it.quartierevivo
 
+@Deprecated(
+    message = "Usare it.quartierevivo.presentation.mappa.MappaSegnalazioniViewModel",
+    replaceWith = ReplaceWith("it.quartierevivo.presentation.mappa.MappaSegnalazioniViewModel"),
+)
+typealias MappaSegnalazioniViewModel = it.quartierevivo.presentation.mappa.MappaSegnalazioniViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.analytics.ktx.analytics
