@@ -64,7 +64,8 @@ import it.quartierevivo.ui.theme.VerdeOliva
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MappaSegnalazioniScreen(
-    viewModel: MappaSegnalazioniViewModel = viewModel()
+    viewModel: MappaSegnalazioniViewModel = viewModel(),
+    onDettaglioClick: (String) -> Unit = {}
 ) {
     val context = LocalContext.current
     val segnalazioni by viewModel.segnalazioniFiltrate.collectAsState()
@@ -106,12 +107,16 @@ fun MappaSegnalazioniScreen(
                     val icon = rememberImageBitmapDescriptor(item.immagineUrl)
                     MarkerInfoWindow(
                         state = rememberMarkerState(position = item.position),
-                        icon = icon
+                        icon = icon,
+                        onClick = {
+                            onDettaglioClick(item.id)
+                            true
+                        }
                     ) {
                         Column(Modifier.padding(8.dp)) {
                             Text(text = item.titolo)
                             Spacer(Modifier.height(4.dp))
-                            Button(onClick = { /* TODO dettagli */ }) {
+                            Button(onClick = { onDettaglioClick(item.id) }) {
                                 Text("Dettagli")
                             }
                         }

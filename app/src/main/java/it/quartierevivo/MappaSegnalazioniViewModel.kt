@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import java.time.LocalDateTime
 
 class MappaSegnalazioniViewModel : ViewModel() {
     private val _segnalazioni = MutableStateFlow<List<Segnalazione>>(emptyList())
@@ -27,5 +28,37 @@ class MappaSegnalazioniViewModel : ViewModel() {
 
     fun setCategoriaFiltro(categoria: String?) {
         _categoriaFiltro.value = categoria
+    }
+
+    fun getSegnalazioneById(id: String): Segnalazione? =
+        _segnalazioni.value.firstOrNull { it.id == id }
+
+    fun aggiornaStatusSegnalazione(
+        id: String,
+        nuovoStatus: StatoSegnalazione,
+        ruoloUtente: RuoloUtente,
+        autoreAggiornamento: String,
+        nota: String = ""
+    ): Boolean {
+        if (ruoloUtente == RuoloUtente.CITTADINO) {
+            return false
+        }
+
+        _segnalazioni.value = _segnalazioni.value.map { segnalazione ->
+            if (segnalazione.id != id) {
+                segnalazione
+            } else {
+                segnalazione.copy(
+                    status = nuovoStatus,
+                    storicoAggiornamenti = segnalazione.storicoAggiornamenti + AggiornamentoStato(
+                        status = nuovoStatus,
+                        autore = autoreAggiornamento,
+                        dataAggiornamento = LocalDateTime.now(),
+                        nota = nota
+                    )
+                )
+            }
+        }
+        return true
     }
 }
