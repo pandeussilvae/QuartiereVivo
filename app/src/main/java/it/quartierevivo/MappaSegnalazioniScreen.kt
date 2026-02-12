@@ -68,10 +68,12 @@ fun MappaSegnalazioniScreen(
 ) {
     val context = LocalContext.current
     val segnalazioni by viewModel.segnalazioniFiltrate.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+    val errore by viewModel.errore.collectAsState()
 
     // Calculate average position
-    val avgLat = segnalazioni.map { it.latitudine }.averageOrNull() ?: 0.0
-    val avgLng = segnalazioni.map { it.longitudine }.averageOrNull() ?: 0.0
+    val avgLat = segnalazioni.map { it.lat }.averageOrNull() ?: 0.0
+    val avgLng = segnalazioni.map { it.lng }.averageOrNull() ?: 0.0
     val cameraPositionState: CameraPositionState = rememberCameraPositionState {
         position = com.google.android.gms.maps.model.CameraPosition.fromLatLngZoom(
             LatLng(avgLat, avgLng),
@@ -92,8 +94,20 @@ fun MappaSegnalazioniScreen(
         MapProperties(isMyLocationEnabled = myLocation != null)
     }
 
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(errore) {
+        errore?.let { message ->
+            val result = snackbarHostState.showSnackbar(message = message, actionLabel = "Riprova")
+            if (result == androidx.compose.material3.SnackbarResult.ActionPerformed) {
+                viewModel.retry()
+            }
+            viewModel.clearError()
+        }
+    }
+
     Scaffold(
-        snackbarHost = { SnackbarHost(SnackbarHostState()) }
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
         Box(Modifier.fillMaxSize().padding(paddingValues)) {
             GoogleMap(
@@ -103,7 +117,7 @@ fun MappaSegnalazioniScreen(
                 properties = properties
             ) {
                 Clustering(items = segnalazioni, clusterItemContent = { item ->
-                    val icon = rememberImageBitmapDescriptor(item.immagineUrl)
+                    val icon = rememberImageBitmapDescriptor(item.imageUrl)
                     MarkerInfoWindow(
                         state = rememberMarkerState(position = item.position),
                         icon = icon
@@ -142,6 +156,15 @@ fun MappaSegnalazioniScreen(
                         }
                     }
                 }
+            }
+
+            if (isLoading) {
+                Text(
+                    text = "Caricamento segnalazioni...",
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(top = 72.dp)
+                )
             }
 
             Row(modifier = Modifier.align(Alignment.BottomCenter).padding(8.dp)) {
