@@ -1,7 +1,65 @@
 package it.quartierevivo
 
 import androidx.lifecycle.ViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 class MainViewModel : ViewModel() {
-    // TODO implement ViewModel logic
+    private val _pendingSegnalazioneDeepLink = MutableStateFlow<String?>(null)
+    val pendingSegnalazioneDeepLink: StateFlow<String?> = _pendingSegnalazioneDeepLink.asStateFlow()
+
+    fun onDeepLinkReceived(segnalazioneId: String?) {
+        if (!segnalazioneId.isNullOrBlank()) {
+            _pendingSegnalazioneDeepLink.value = segnalazioneId
+        }
+    }
+
+    fun consumeDeepLink() {
+        _pendingSegnalazioneDeepLink.value = null
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+
+class MainViewModel(
+    private val authRepository: AuthRepository = AuthRepository()
+) : ViewModel() {
+
+    private val _authState = MutableStateFlow<AuthState>(AuthState.Loading)
+    val authState: StateFlow<AuthState> = _authState.asStateFlow()
+
+    init {
+        observeAuthState()
+    }
+
+    private fun observeAuthState() {
+        viewModelScope.launch {
+            authRepository.observeAuthState().collect { user ->
+                _authState.update {
+                    if (user != null) AuthState.Authenticated else AuthState.Unauthenticated
+                }
+            }
+        }
+    }
+
+    fun signOut() {
+        authRepository.signOut()
+    }
+}
+
+sealed interface AuthState {
+    data object Loading : AuthState
+    data object Authenticated : AuthState
+    data object Unauthenticated : AuthState
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.analytics.ktx.analytics
+import com.google.firebase.ktx.Firebase
+
+class MainViewModel : ViewModel() {
+    fun tracciaLogin() {
+        Firebase.analytics.logEvent(FirebaseAnalytics.Event.LOGIN, null)
+    }
 }

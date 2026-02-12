@@ -4,6 +4,8 @@ plugins {
     id("com.google.gms.google-services")
     id("org.jlleitschuh.gradle.ktlint")
     id("io.gitlab.arturbosch.detekt")
+    id("com.google.firebase.crashlytics")
+    id("com.google.firebase.firebase-perf")
 }
 
 android {
@@ -20,12 +22,23 @@ android {
     }
 
     buildTypes {
+        getByName("debug") {
+            manifestPlaceholders["MAPS_API_KEY"] =
+                (project.findProperty("MAPS_API_KEY_DEBUG") as String?)
+                    ?: (project.findProperty("MAPS_API_KEY") as String?)
+                    ?: ""
+        }
+
         getByName("release") {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
+            manifestPlaceholders["MAPS_API_KEY"] =
+                (project.findProperty("MAPS_API_KEY_RELEASE") as String?)
+                    ?: (project.findProperty("MAPS_API_KEY") as String?)
+                    ?: ""
         }
     }
 
@@ -64,10 +77,14 @@ ktlint {
 }
 
 dependencies {
-    implementation(platform("com.google.firebase:firebase-bom:32.2.0"))
+    implementation(platform("com.google.firebase:firebase-bom:33.10.0"))
+    implementation("com.google.firebase:firebase-analytics-ktx")
     implementation("com.google.firebase:firebase-auth-ktx")
+    implementation("com.google.firebase:firebase-crashlytics-ktx")
     implementation("com.google.firebase:firebase-firestore-ktx")
+    implementation("com.google.firebase:firebase-perf-ktx")
     implementation("com.google.firebase:firebase-storage-ktx")
+    implementation("com.google.firebase:firebase-messaging-ktx")
 
     implementation("androidx.core:core-ktx:1.10.1")
     implementation("androidx.activity:activity-compose:1.7.2")
@@ -76,6 +93,9 @@ dependencies {
     implementation("androidx.compose.ui:ui:1.5.1")
     implementation("androidx.compose.ui:ui-tooling-preview:1.5.1")
     implementation("androidx.compose.material3:material3:1.1.0")
+    implementation("androidx.navigation:navigation-compose:2.7.7")
+    implementation("androidx.datastore:datastore-preferences:1.1.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
 
     implementation("io.coil-kt:coil-compose:2.4.0")
 
@@ -83,6 +103,9 @@ dependencies {
     implementation("com.google.maps.android:maps-compose:2.11.4")
     implementation("com.google.maps.android:maps-compose-utils:2.11.4")
     implementation("com.google.android.gms:play-services-maps:18.2.0")
+    implementation("com.google.android.gms:play-services-location:21.3.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
 
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
