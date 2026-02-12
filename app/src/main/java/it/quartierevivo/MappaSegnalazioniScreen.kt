@@ -12,6 +12,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Policy
+import androidx.compose.material.icons.filled.Report
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -38,6 +40,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
 import coil.ImageLoader
@@ -57,6 +60,21 @@ import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberMarkerState
 import it.quartierevivo.presentation.common.UiState
 import it.quartierevivo.presentation.mappa.MappaSegnalazioniViewModel
+import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.core.graphics.drawable.toBitmap
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.ui.res.painterResource
+import com.google.firebase.crashlytics.ktx.crashlytics
+import com.google.firebase.ktx.Firebase
 import it.quartierevivo.ui.theme.VerdeOliva
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -65,6 +83,9 @@ import kotlinx.coroutines.tasks.await
 @Composable
 fun MappaSegnalazioniScreen(
     viewModel: MappaSegnalazioniViewModel,
+    viewModel: MappaSegnalazioniViewModel = viewModel(),
+    onOpenReportForm: () -> Unit = {},
+    onOpenPrivacy: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
@@ -117,8 +138,8 @@ fun MappaSegnalazioniScreen(
                         Column(Modifier.padding(8.dp)) {
                             Text(text = item.titolo)
                             Spacer(Modifier.height(4.dp))
-                            Button(onClick = { /* TODO dettagli */ }) {
-                                Text("Dettagli")
+                            Button(onClick = { viewModel.tracciaAperturaDettaglio(item.id) }) {
+                                Text(stringResource(R.string.details))
                             }
                         }
                     }
@@ -135,12 +156,12 @@ fun MappaSegnalazioniScreen(
                         value = categoriaFiltro ?: "",
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("Categoria") },
+                        label = { Text(stringResource(R.string.filter_category)) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
                         modifier = Modifier.menuAnchor(),
                     )
                     androidx.compose.material3.ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-                        DropdownMenuItem(text = { Text("Tutte") }, onClick = {
+                        DropdownMenuItem(text = { Text(stringResource(R.string.filter_all)) }, onClick = {
                             viewModel.setCategoriaFiltro(null)
                             expanded = false
                         })
@@ -160,15 +181,27 @@ fun MappaSegnalazioniScreen(
                 }
             }
 
-            Row(modifier = Modifier.align(Alignment.BottomCenter).padding(8.dp)) {
-                IconButton(onClick = { /* Home */ }) {
-                    Icon(Icons.Default.Home, contentDescription = "Home", tint = VerdeOliva)
-                }
-                IconButton(onClick = { expanded = !expanded }) {
-                    Icon(Icons.Default.FilterList, contentDescription = "Filtri", tint = VerdeOliva)
-                }
-                IconButton(onClick = { /* Logout */ }) {
-                    Icon(Icons.Default.ExitToApp, contentDescription = "Logout", tint = VerdeOliva)
+            Surface(
+                color = VerdeOliva,
+                shape = CircleShape,
+                modifier = Modifier.align(Alignment.BottomCenter).padding(8.dp)
+            ) {
+                Row(modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)) {
+                    IconButton(onClick = { /* Home */ }) {
+                        Icon(Icons.Default.Home, contentDescription = stringResource(R.string.home), tint = Color.White)
+                    }
+                    IconButton(onClick = onOpenReportForm) {
+                        Icon(Icons.Default.Report, contentDescription = stringResource(R.string.open_report_form), tint = Color.White)
+                    }
+                    IconButton(onClick = { expanded = !expanded }) {
+                        Icon(Icons.Default.FilterList, contentDescription = stringResource(R.string.filters), tint = Color.White)
+                    }
+                    IconButton(onClick = onOpenPrivacy) {
+                        Icon(Icons.Default.Policy, contentDescription = stringResource(R.string.open_privacy_terms), tint = Color.White)
+                    }
+                    IconButton(onClick = { /* Logout */ }) {
+                        Icon(Icons.Default.ExitToApp, contentDescription = stringResource(R.string.logout), tint = Color.White)
+                    }
                 }
             }
 
@@ -179,6 +212,14 @@ fun MappaSegnalazioniScreen(
                         runCatching { fused.lastLocation.await() }.getOrNull()?.let { location ->
                             myLocation = LatLng(location.latitude, location.longitude)
                             cameraPositionState.position = cameraPositionState.position.copy(target = myLocation!!)
+                        try {
+                            val loc = fused.lastLocation.await()
+                            loc?.let { location ->
+                                myLocation = LatLng(location.latitude, location.longitude)
+                                cameraPositionState.position = cameraPositionState.position.copy(target = myLocation!!)
+                            }
+                        } catch (exception: Exception) {
+                            Firebase.crashlytics.recordException(exception)
                         }
                     }
                 },
@@ -192,6 +233,8 @@ fun MappaSegnalazioniScreen(
                     painterResource(android.R.drawable.ic_menu_mylocation),
                     contentDescription = "My Location",
                     tint = Color.White,
+                    contentDescription = stringResource(R.string.my_location),
+                    tint = Color.White
                 )
             }
         }

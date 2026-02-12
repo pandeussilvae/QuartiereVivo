@@ -27,6 +27,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.collectAsState
 import it.quartierevivo.presentation.common.UiState
@@ -46,7 +47,7 @@ fun SegnalazioneScreen(viewModel: SegnalazioneViewModel) {
         if (granted) {
             photoLauncher.launch("image/*")
         } else {
-            Toast.makeText(context, "Permesso fotocamera negato", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, context.getString(R.string.camera_permission_denied), Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -54,7 +55,7 @@ fun SegnalazioneScreen(viewModel: SegnalazioneViewModel) {
         if (granted) {
             viewModel.onPosizioneChange("Lat:0, Lng:0")
         } else {
-            Toast.makeText(context, "Permesso posizione negato", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, context.getString(R.string.location_permission_denied), Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -72,11 +73,19 @@ fun SegnalazioneScreen(viewModel: SegnalazioneViewModel) {
             }
             UiState.Empty,
             UiState.Loading -> Unit
+    LaunchedEffect(viewModel.invioConfermato) {
+        if (viewModel.invioConfermato) {
+            snackbarHostState.showSnackbar(context.getString(R.string.report_sent))
+            viewModel.resetConferma()
         }
     }
 
     var expanded by remember { mutableStateOf(false) }
-    val categorie = listOf("Manutenzione", "Sicurezza", "Altro")
+    val categorie = listOf(
+        stringResource(R.string.report_category_maintenance),
+        stringResource(R.string.report_category_safety),
+        stringResource(R.string.report_category_other)
+    )
 
     Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) }) { paddingValues ->
         Column(
@@ -90,12 +99,16 @@ fun SegnalazioneScreen(viewModel: SegnalazioneViewModel) {
                 onValueChange = viewModel::onTitoloChange,
                 label = { Text("Titolo") },
                 modifier = Modifier.fillMaxWidth(),
+                label = { Text(stringResource(R.string.title)) },
+                modifier = Modifier.fillMaxWidth()
             )
             OutlinedTextField(
                 value = viewModel.descrizione,
                 onValueChange = viewModel::onDescrizioneChange,
                 label = { Text("Descrizione") },
                 modifier = Modifier.fillMaxWidth(),
+                label = { Text(stringResource(R.string.description)) },
+                modifier = Modifier.fillMaxWidth()
             )
             ExposedDropdownMenuBox(
                 expanded = expanded,
@@ -105,7 +118,7 @@ fun SegnalazioneScreen(viewModel: SegnalazioneViewModel) {
                     value = viewModel.categoria,
                     onValueChange = {},
                     readOnly = true,
-                    label = { Text("Categoria") },
+                    label = { Text(stringResource(R.string.category)) },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                     modifier = Modifier
                         .menuAnchor()
@@ -137,6 +150,18 @@ fun SegnalazioneScreen(viewModel: SegnalazioneViewModel) {
                 enabled = submitState !is UiState.Loading,
             ) {
                 Text(if (submitState is UiState.Loading) "Invio..." else "Invia")
+            Button(onClick = {
+                cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+            }) {
+                Text(stringResource(R.string.select_photo))
+            }
+            Button(onClick = {
+                locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+            }) {
+                Text(stringResource(R.string.get_location))
+            }
+            Button(onClick = { viewModel.inviaSegnalazione() }) {
+                Text(stringResource(R.string.send))
             }
         }
     }
