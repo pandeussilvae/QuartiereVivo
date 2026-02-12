@@ -83,6 +83,7 @@ import kotlinx.coroutines.tasks.await
 @Composable
 fun MappaSegnalazioniScreen(
     viewModel: MappaSegnalazioniViewModel = viewModel(),
+    onDettaglioClick: (String) -> Unit = {}
     onLogoutClick: () -> Unit = {}
     viewModel: MappaSegnalazioniViewModel,
     viewModel: MappaSegnalazioniViewModel = viewModel(),
@@ -156,10 +157,16 @@ fun MappaSegnalazioniScreen(
                     MarkerInfoWindow(
                         state = rememberMarkerState(position = item.position),
                         icon = icon,
+                        onClick = {
+                            onDettaglioClick(item.id)
+                            true
+                        }
                     ) {
                         Column(Modifier.padding(8.dp)) {
                             Text(text = item.titolo)
                             Spacer(Modifier.height(4.dp))
+                            Button(onClick = { onDettaglioClick(item.id) }) {
+                                Text("Dettagli")
                             Button(onClick = { viewModel.tracciaAperturaDettaglio(item.id) }) {
                                 Text(stringResource(R.string.details))
                             }

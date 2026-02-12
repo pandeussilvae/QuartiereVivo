@@ -5,11 +5,23 @@ import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 import com.google.maps.android.clustering.ClusterItem
+import java.time.LocalDateTime
 
 /**
  * Dati di una segnalazione geolocalizzata.
  */
 data class Segnalazione(
+    val id: String,
+    val titolo: String,
+    val latitudine: Double,
+    val longitudine: Double,
+    val descrizione: String = "",
+    val immagineUrl: String? = null,
+    val categoria: String = "",
+    val autore: String = "",
+    val dataCreazione: LocalDateTime = LocalDateTime.now(),
+    val status: StatoSegnalazione = StatoSegnalazione.NUOVA,
+    val storicoAggiornamenti: List<AggiornamentoStato> = emptyList(),
     val id: String = "",
     val titolo: String = "",
     val descrizione: String = "",
@@ -50,6 +62,24 @@ data class Segnalazione(
     }
 }
 
+enum class StatoSegnalazione(val label: String) {
+    NUOVA("Nuova"),
+    IN_CARICO("In carico"),
+    RISOLTA("Risolta")
+}
+
+enum class RuoloUtente {
+    CITTADINO,
+    MODERATORE,
+    AMMINISTRATORE
+}
+
+data class AggiornamentoStato(
+    val status: StatoSegnalazione,
+    val autore: String,
+    val dataAggiornamento: LocalDateTime,
+    val nota: String = ""
+)
 fun Segnalazione.toFirestorePayload(): Map<String, Any?> = mapOf(
     "titolo" to titolo,
     "descrizione" to descrizione,
