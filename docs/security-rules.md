@@ -8,9 +8,26 @@ Questo documento descrive le regole di sicurezza implementate nei file:
 ## Obiettivi
 
 1. Accesso consentito solo a utenti autenticati.
-2. Protezione dei dati per ownership (`ownerId == request.auth.uid`).
+2. Protezione dei dati per ownership (`creatoreId == request.auth.uid`).
 3. Supporto ruoli **admin** e **moderator**.
 4. Aggiornamento dello stato delle segnalazioni consentito solo ai moderatori/admin.
+5. Schema unico della collezione `segnalazioni` allineato tra app, Cloud Functions e security rules.
+
+## Schema finale `segnalazioni/{segnalazioneId}`
+
+| Campo | Tipo | Obbligatorio | Note |
+|---|---|---:|---|
+| `titolo` | `string` | ✅ | Titolo segnalazione |
+| `descrizione` | `string` | ✅ | Descrizione segnalazione |
+| `categoria` | `string` | ✅ | Categoria utente |
+| `latitudine` | `number` | ✅ | Coordinate geografiche (naming canonico) |
+| `longitudine` | `number` | ✅ | Coordinate geografiche (naming canonico) |
+| `immagineUrl` | `string \| null` | ❌ | URL pubblico immagine |
+| `creatoreId` | `string` | ✅ | UID autore |
+| `stato` | `string` | ✅ | Solo valori canonicali: `nuova`, `in_carico`, `risolta` |
+| `createdAt` | `timestamp` | ✅ | Server timestamp creazione |
+| `updatedAt` | `timestamp` | ✅ | Server timestamp ultimo update |
+| `updatedBy` | `string` | ✅ | UID ultimo autore modifica |
 
 ## Modello ruoli
 
@@ -37,18 +54,18 @@ Le regole supportano due modalità in parallelo:
 - **read**: consentito al proprietario o ad admin.
 - **create/update/delete**: solo admin.
 
-### Collezione `reports/{reportId}`
+### Collezione `segnalazioni/{segnalazioneId}`
 
 - **read**: qualsiasi utente autenticato.
 - **create**:
   - utente autenticato;
-  - `ownerId == auth.uid`;
-  - campi consentiti limitati da allow-list;
-  - `status` iniziale solo `open` o `pending`;
-  - `updatedBy == auth.uid`.
+  - schema validato (allow-list campi + campi obbligatori + controllo tipi);
+  - `creatoreId == auth.uid`;
+  - `updatedBy == auth.uid`;
+  - `stato` iniziale obbligatoriamente `nuova`.
 - **update**:
-  - proprietario: può modificare contenuti ma **non** `status`;
-  - moderatore/admin: può aggiornare solo `status` (e `updatedBy` / eventuale `moderationNote`) lasciando invariati i campi core.
+  - proprietario: può modificare contenuti ma **non** `stato` e **non** `createdAt`;
+  - moderatore/admin: può aggiornare solo `stato` (con `updatedBy` / `updatedAt`) lasciando invariati i campi core.
 - **delete**: proprietario o admin.
 
 ## Storage: regole principali
@@ -70,26 +87,16 @@ L'ownership è verificata leggendo `reports/{reportId}.ownerId` da Firestore.
 
 | Caso | Esito |
 |---|---|
-| Utente non autenticato legge `reports` | ❌ Negato |
-| Utente autenticato crea `reports` con `ownerId` diverso dal suo UID | ❌ Negato |
-| Owner aggiorna `title`/`description` senza toccare `status` | ✅ Consentito |
-| Owner prova a impostare `status = resolved` | ❌ Negato |
-| Moderator aggiorna solo `status` e `updatedBy` | ✅ Consentito |
-| Utente normale aggiorna `status` | ❌ Negato |
+| Utente non autenticato legge `segnalazioni` | ❌ Negato |
+| Utente autenticato crea `segnalazioni` con `creatoreId` diverso dal suo UID | ❌ Negato |
+| Owner aggiorna `titolo`/`descrizione` senza toccare `stato` | ✅ Consentito |
+| Owner prova a impostare `stato = risolta` | ❌ Negato |
+| Moderator aggiorna solo `stato` e `updatedBy` | ✅ Consentito |
+| Utente normale aggiorna `stato` | ❌ Negato |
 | Admin crea/aggiorna `roles/{uid}` | ✅ Consentito |
 | Utente normale crea/aggiorna `roles/{uid}` | ❌ Negato |
 
-### Storage
-
-| Caso | Esito |
-|---|---|
-| Utente autenticato owner carica file su `reports/{reportId}/...` | ✅ Consentito |
-| Utente autenticato non owner carica file su report altrui | ❌ Negato |
-| Moderator legge/allega file su report | ✅ Consentito |
-| Utente non autenticato accede a Storage | ❌ Negato |
-
 ## Note operative
 
-- Le regole assumono che il documento `reports/{reportId}` esista prima del caricamento file in Storage.
-- Se si usa la collezione `roles`, prevedere una Cloud Function / pannello admin per la gestione sicura dei ruoli.
 - Per coerenza applicativa, aggiornare sempre `updatedBy` e `updatedAt` ad ogni modifica.
+- Lo schema applicativo è centralizzato anche in `domain/model/Segnalazione.kt` (`SegnalazioneSchema`).

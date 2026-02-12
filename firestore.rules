@@ -27,45 +27,79 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    function hasOnlyAllowedReportKeys() {
+    function allowedSegnalazioneStatuses() {
+      return ['nuova', 'in_carico', 'risolta'];
+    }
+
+    function hasOnlyAllowedSegnalazioneKeys() {
       return request.resource.data.keys().hasOnly([
-        'ownerId',
-        'title',
-        'description',
-        'category',
-        'imagePath',
-        'lat',
-        'lng',
-        'status',
+        'titolo',
+        'descrizione',
+        'categoria',
+        'latitudine',
+        'longitudine',
+        'immagineUrl',
+        'creatoreId',
+        'stato',
         'createdAt',
         'updatedAt',
-        'moderationNote',
         'updatedBy'
       ]);
     }
 
-    function isValidInitialStatus() {
-      return request.resource.data.status in ['open', 'pending'];
+    function hasRequiredSegnalazioneKeys() {
+      return request.resource.data.keys().hasAll([
+        'titolo',
+        'descrizione',
+        'categoria',
+        'latitudine',
+        'longitudine',
+        'creatoreId',
+        'stato',
+        'createdAt',
+        'updatedAt',
+        'updatedBy'
+      ]);
     }
 
-    function ownerCanUpdateOwnReport() {
-      return request.resource.data.ownerId == resource.data.ownerId
-        && request.resource.data.status == resource.data.status
-        && request.resource.data.updatedBy == resource.data.updatedBy
-        && request.resource.data.createdAt == resource.data.createdAt;
+    function hasValidSegnalazioneTypes() {
+      return request.resource.data.titolo is string
+        && request.resource.data.descrizione is string
+        && request.resource.data.categoria is string
+        && request.resource.data.latitudine is number
+        && request.resource.data.longitudine is number
+        && (request.resource.data.immagineUrl == null || request.resource.data.immagineUrl is string)
+        && request.resource.data.creatoreId is string
+        && request.resource.data.stato is string
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.updatedAt is timestamp
+        && request.resource.data.updatedBy is string;
+    }
+
+    function hasValidStato() {
+      return request.resource.data.stato in allowedSegnalazioneStatuses();
+    }
+
+    function ownerCanUpdateOwnSegnalazione() {
+      return request.resource.data.creatoreId == resource.data.creatoreId
+        && request.resource.data.stato == resource.data.stato
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.updatedBy == request.auth.uid
+        && request.resource.data.updatedAt >= resource.data.updatedAt;
     }
 
     function moderatorCanChangeStatusOnly() {
-      return request.resource.data.ownerId == resource.data.ownerId
-        && request.resource.data.title == resource.data.title
-        && request.resource.data.description == resource.data.description
-        && request.resource.data.category == resource.data.category
-        && request.resource.data.imagePath == resource.data.imagePath
-        && request.resource.data.lat == resource.data.lat
-        && request.resource.data.lng == resource.data.lng
+      return request.resource.data.creatoreId == resource.data.creatoreId
+        && request.resource.data.titolo == resource.data.titolo
+        && request.resource.data.descrizione == resource.data.descrizione
+        && request.resource.data.categoria == resource.data.categoria
+        && request.resource.data.immagineUrl == resource.data.immagineUrl
+        && request.resource.data.latitudine == resource.data.latitudine
+        && request.resource.data.longitudine == resource.data.longitudine
         && request.resource.data.createdAt == resource.data.createdAt
-        && request.resource.data.status in ['open', 'pending', 'in_progress', 'resolved', 'rejected']
-        && request.resource.data.updatedBy == request.auth.uid;
+        && request.resource.data.stato in allowedSegnalazioneStatuses()
+        && request.resource.data.updatedBy == request.auth.uid
+        && request.resource.data.updatedAt >= resource.data.updatedAt;
     }
 
     // Optional profile documents for users.
@@ -80,22 +114,28 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
 
-    // Reports/segnalazioni.
-    match /reports/{reportId} {
+    // Segnalazioni.
+    match /segnalazioni/{segnalazioneId} {
       allow read: if isSignedIn();
 
       allow create: if isSignedIn()
-        && hasOnlyAllowedReportKeys()
-        && request.resource.data.ownerId == request.auth.uid
-        && isValidInitialStatus()
-        && request.resource.data.updatedBy == request.auth.uid;
+        && hasOnlyAllowedSegnalazioneKeys()
+        && hasRequiredSegnalazioneKeys()
+        && hasValidSegnalazioneTypes()
+        && request.resource.data.creatoreId == request.auth.uid
+        && request.resource.data.updatedBy == request.auth.uid
+        && request.resource.data.stato == 'nuova';
 
-      allow update: if hasOnlyAllowedReportKeys() && (
-        (isOwner(resource.data.ownerId) && ownerCanUpdateOwnReport())
-        || (isModerator() && moderatorCanChangeStatusOnly())
-      );
+      allow update: if hasOnlyAllowedSegnalazioneKeys()
+        && hasRequiredSegnalazioneKeys()
+        && hasValidSegnalazioneTypes()
+        && hasValidStato()
+        && (
+          (isOwner(resource.data.creatoreId) && ownerCanUpdateOwnSegnalazione())
+          || (isModerator() && moderatorCanChangeStatusOnly())
+        );
 
-      allow delete: if isOwner(resource.data.ownerId) || isAdmin();
+      allow delete: if isOwner(resource.data.creatoreId) || isAdmin();
     }
   }
 }
