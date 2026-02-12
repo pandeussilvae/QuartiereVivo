@@ -7,6 +7,7 @@ package it.quartierevivo
 typealias MappaSegnalazioniViewModel = it.quartierevivo.presentation.mappa.MappaSegnalazioniViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import it.quartierevivo.domain.usecase.FilterSegnalazioniByCategoriaUseCase
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.analytics.ktx.analytics
@@ -19,6 +20,10 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import java.time.LocalDateTime
 
+class MappaSegnalazioniViewModel(
+    private val filterSegnalazioniByCategoriaUseCase: FilterSegnalazioniByCategoriaUseCase =
+        FilterSegnalazioniByCategoriaUseCase(),
+) : ViewModel() {
 class MappaSegnalazioniViewModel : ViewModel() {
     private val firestore = FirebaseFirestore.getInstance()
 
@@ -38,8 +43,7 @@ class MappaSegnalazioniViewModel : ViewModel() {
 
     val segnalazioniFiltrate: StateFlow<List<Segnalazione>> =
         combine(_segnalazioni, _categoriaFiltro) { lista, categoria ->
-            if (categoria.isNullOrBlank()) lista
-            else lista.filter { it.categoria == categoria }
+            filterSegnalazioniByCategoriaUseCase(lista, categoria)
         }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     init {
