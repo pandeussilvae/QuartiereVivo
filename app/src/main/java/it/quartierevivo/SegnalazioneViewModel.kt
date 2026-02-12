@@ -1,10 +1,19 @@
 package it.quartierevivo
 
+@Deprecated(
+    message = "Usare it.quartierevivo.presentation.segnalazione.SegnalazioneViewModel",
+    replaceWith = ReplaceWith("it.quartierevivo.presentation.segnalazione.SegnalazioneViewModel"),
+)
+typealias SegnalazioneViewModel = it.quartierevivo.presentation.segnalazione.SegnalazioneViewModel
 import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.analytics.ktx.analytics
+import com.google.firebase.analytics.ktx.logEvent
+import com.google.firebase.ktx.Firebase
 
 class SegnalazioneViewModel : ViewModel() {
     var titolo by mutableStateOf("")
@@ -27,7 +36,10 @@ class SegnalazioneViewModel : ViewModel() {
     fun onPosizioneChange(value: String?) { posizione = value }
 
     fun inviaSegnalazione() {
-        // Placeholder for actual send logic (e.g., Firebase)
+        Firebase.analytics.logEvent("submit_report") {
+            param(FirebaseAnalytics.Param.ITEM_CATEGORY, categoria)
+            param(FirebaseAnalytics.Param.ITEM_NAME, titolo)
+        }
         invioConfermato = true
     }
 

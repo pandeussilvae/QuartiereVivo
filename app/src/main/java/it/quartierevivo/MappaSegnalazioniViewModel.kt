@@ -1,7 +1,15 @@
 package it.quartierevivo
 
+@Deprecated(
+    message = "Usare it.quartierevivo.presentation.mappa.MappaSegnalazioniViewModel",
+    replaceWith = ReplaceWith("it.quartierevivo.presentation.mappa.MappaSegnalazioniViewModel"),
+)
+typealias MappaSegnalazioniViewModel = it.quartierevivo.presentation.mappa.MappaSegnalazioniViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.analytics.ktx.analytics
+import com.google.firebase.analytics.ktx.logEvent
+import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -27,5 +35,11 @@ class MappaSegnalazioniViewModel : ViewModel() {
 
     fun setCategoriaFiltro(categoria: String?) {
         _categoriaFiltro.value = categoria
+    }
+
+    fun tracciaAperturaDettaglio(segnalazioneId: String) {
+        Firebase.analytics.logEvent("open_report_detail") {
+            param("report_id", segnalazioneId)
+        }
     }
 }
