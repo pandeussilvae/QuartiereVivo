@@ -7,17 +7,24 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -25,12 +32,15 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.ImageLoader
 import coil.request.ImageRequest
@@ -47,35 +57,26 @@ import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.MarkerInfoWindow
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberMarkerState
-import kotlinx.coroutines.tasks.await
-import kotlinx.coroutines.launch
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.core.graphics.drawable.toBitmap
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Scaffold
-import androidx.compose.ui.res.painterResource
 import it.quartierevivo.ui.theme.VerdeOliva
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MappaSegnalazioniScreen(
-    viewModel: MappaSegnalazioniViewModel = viewModel()
+    viewModel: MappaSegnalazioniViewModel = viewModel(),
+    onOpenDetails: (String) -> Unit,
+    onOpenPreferences: () -> Unit,
 ) {
     val context = LocalContext.current
     val segnalazioni by viewModel.segnalazioniFiltrate.collectAsState()
 
-    // Calculate average position
     val avgLat = segnalazioni.map { it.latitudine }.averageOrNull() ?: 0.0
     val avgLng = segnalazioni.map { it.longitudine }.averageOrNull() ?: 0.0
     val cameraPositionState: CameraPositionState = rememberCameraPositionState {
         position = com.google.android.gms.maps.model.CameraPosition.fromLatLngZoom(
             LatLng(avgLat, avgLng),
-            13f
+            13f,
         )
     }
 
@@ -88,30 +89,35 @@ fun MappaSegnalazioniScreen(
     val uiSettings = remember {
         MapUiSettings(myLocationButtonEnabled = false, zoomControlsEnabled = false)
     }
-    val properties = remember {
+    val properties = remember(myLocation) {
         MapProperties(isMyLocationEnabled = myLocation != null)
     }
 
     Scaffold(
-        snackbarHost = { SnackbarHost(SnackbarHostState()) }
+        snackbarHost = { SnackbarHost(SnackbarHostState()) },
     ) { paddingValues ->
-        Box(Modifier.fillMaxSize().padding(paddingValues)) {
+        Box(
+            Modifier
+                .fillMaxSize()
+                .padding(paddingValues),
+        ) {
             GoogleMap(
                 modifier = Modifier.fillMaxSize(),
                 cameraPositionState = cameraPositionState,
                 uiSettings = uiSettings,
-                properties = properties
+                properties = properties,
             ) {
                 Clustering(items = segnalazioni, clusterItemContent = { item ->
                     val icon = rememberImageBitmapDescriptor(item.immagineUrl)
                     MarkerInfoWindow(
                         state = rememberMarkerState(position = item.position),
-                        icon = icon
+                        icon = icon,
                     ) {
                         Column(Modifier.padding(8.dp)) {
                             Text(text = item.titolo)
+                            Text(text = "Stato: ${item.status}")
                             Spacer(Modifier.height(4.dp))
-                            Button(onClick = { /* TODO dettagli */ }) {
+                            Button(onClick = { onOpenDetails(item.id) }) {
                                 Text("Dettagli")
                             }
                         }
@@ -127,7 +133,7 @@ fun MappaSegnalazioniScreen(
                         readOnly = true,
                         label = { Text("Categoria") },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
-                        modifier = Modifier.menuAnchor()
+                        modifier = Modifier.menuAnchor(),
                     )
                     androidx.compose.material3.ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                         DropdownMenuItem(text = { Text("Tutte") }, onClick = {
@@ -145,13 +151,16 @@ fun MappaSegnalazioniScreen(
             }
 
             Row(modifier = Modifier.align(Alignment.BottomCenter).padding(8.dp)) {
-                IconButton(onClick = { /* Home */ }) {
+                IconButton(onClick = { }) {
                     Icon(Icons.Default.Home, contentDescription = "Home", tint = VerdeOliva)
                 }
                 IconButton(onClick = { expanded = !expanded }) {
                     Icon(Icons.Default.FilterList, contentDescription = "Filtri", tint = VerdeOliva)
                 }
-                IconButton(onClick = { /* Logout */ }) {
+                IconButton(onClick = onOpenPreferences) {
+                    Icon(Icons.Default.Notifications, contentDescription = "Preferenze notifiche", tint = VerdeOliva)
+                }
+                IconButton(onClick = { }) {
                     Icon(Icons.Default.ExitToApp, contentDescription = "Logout", tint = VerdeOliva)
                 }
             }
@@ -166,16 +175,21 @@ fun MappaSegnalazioniScreen(
                                 myLocation = LatLng(location.latitude, location.longitude)
                                 cameraPositionState.position = cameraPositionState.position.copy(target = myLocation!!)
                             }
-                        } catch (_: Exception) {}
+                        } catch (_: Exception) {
+                        }
                     }
                 },
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .padding(end = 16.dp, bottom = 80.dp),
                 containerColor = VerdeOliva,
-                shape = CircleShape
+                shape = CircleShape,
             ) {
-                Icon(painterResource(android.R.drawable.ic_menu_mylocation), contentDescription = "My Location", tint = Color.White)
+                Icon(
+                    painterResource(android.R.drawable.ic_menu_mylocation),
+                    contentDescription = "My Location",
+                    tint = Color.White,
+                )
             }
         }
     }
@@ -193,7 +207,9 @@ fun rememberImageBitmapDescriptor(url: String?): BitmapDescriptor? {
             if (result is SuccessResult) {
                 val bitmap = result.drawable.toBitmap(width = 64, height = 64)
                 BitmapDescriptorFactory.fromBitmap(bitmap)
-            } else null
+            } else {
+                null
+            }
         }
     }
     return descriptor

@@ -3,8 +3,8 @@ package it.quartierevivo
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 
@@ -27,5 +27,9 @@ class MappaSegnalazioniViewModel : ViewModel() {
 
     fun setCategoriaFiltro(categoria: String?) {
         _categoriaFiltro.value = categoria
+    }
+
+    fun getSegnalazioneById(id: String): Segnalazione? {
+        return _segnalazioni.value.firstOrNull { it.id == id }
     }
 }
