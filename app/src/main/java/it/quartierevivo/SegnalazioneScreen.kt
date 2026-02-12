@@ -23,6 +23,8 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -80,6 +82,8 @@ fun SegnalazioneScreen(viewModel: SegnalazioneViewModel) {
 
     fun updateLocationPermissionState(granted: Boolean) {
         if (granted) {
+            // Placeholder for real GPS retrieval
+            viewModel.onPosizioneChange("Lat:45.4642, Lng:9.1900")
             viewModel.onLocationPermissionStateChange(PermissionState.Granted)
             if (uiState.privacyConsentGiven) {
                 fetchCurrentLocation(
@@ -191,6 +195,15 @@ fun SegnalazioneScreen(viewModel: SegnalazioneViewModel) {
                 onValueChange = viewModel::onTitoloChange,
                 enabled = !viewModel.isLoading,
                 label = { Text("Titolo") },
+                isError = viewModel.titoloError != null,
+                supportingText = {
+                    val error = viewModel.titoloError
+                    if (error != null) {
+                        Text(error)
+                    } else {
+                        Text("${viewModel.titolo.length}/80")
+                    }
+                },
                 modifier = Modifier.fillMaxWidth(),
                 label = { Text(stringResource(R.string.title)) },
                 modifier = Modifier.fillMaxWidth()
@@ -200,6 +213,15 @@ fun SegnalazioneScreen(viewModel: SegnalazioneViewModel) {
                 onValueChange = viewModel::onDescrizioneChange,
                 enabled = !viewModel.isLoading,
                 label = { Text("Descrizione") },
+                isError = viewModel.descrizioneError != null,
+                supportingText = {
+                    val error = viewModel.descrizioneError
+                    if (error != null) {
+                        Text(error)
+                    } else {
+                        Text("${viewModel.descrizione.length}/500")
+                    }
+                },
                 modifier = Modifier.fillMaxWidth(),
                 label = { Text(stringResource(R.string.description)) },
                 modifier = Modifier.fillMaxWidth()
@@ -213,6 +235,11 @@ fun SegnalazioneScreen(viewModel: SegnalazioneViewModel) {
                     onValueChange = {},
                     enabled = !viewModel.isLoading,
                     readOnly = true,
+                    label = { Text("Categoria") },
+                    isError = viewModel.categoriaError != null,
+                    supportingText = {
+                        viewModel.categoriaError?.let { Text(it) }
+                    },
                     label = { Text(stringResource(R.string.category)) },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                     modifier = Modifier
@@ -378,6 +405,17 @@ fun SegnalazioneScreen(viewModel: SegnalazioneViewModel) {
                 }
                 else -> Unit
             }
+            viewModel.posizioneError?.let {
+                Text(text = it, color = MaterialTheme.colorScheme.error)
+            }
+            viewModel.submitError?.let {
+                Text(text = it, color = MaterialTheme.colorScheme.error)
+            }
+            Button(
+                onClick = { viewModel.inviaSegnalazione() },
+                enabled = viewModel.canSubmit
+            ) {
+                Text(if (viewModel.isLoading) "Invio in corso..." else "Invia")
 
             uiState.posizione?.let { posizione ->
                 Text("Posizione rilevata: $posizione")
