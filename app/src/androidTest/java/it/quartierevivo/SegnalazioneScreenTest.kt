@@ -4,11 +4,16 @@ import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.assertExists
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
-import androidx.compose.ui.test.onAllNodes
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
-import androidx.compose.ui.test.hasSetTextAction
+import it.quartierevivo.domain.model.Segnalazione
+import it.quartierevivo.domain.model.SegnalazioneInput
+import it.quartierevivo.domain.repository.SegnalazioneRepository
+import it.quartierevivo.domain.usecase.InviaSegnalazioneUseCase
+import it.quartierevivo.presentation.segnalazione.SegnalazioneViewModel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 import org.junit.Rule
 import org.junit.Test
 
@@ -18,29 +23,56 @@ class SegnalazioneScreenTest {
     val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
     @Test
-    fun criticalFieldsAndActionsAreVisible() {
+    fun criticalFieldsAndActionsAreVisible_usingResourceStrings() {
+        val activity = composeTestRule.activity
+        val viewModel = SegnalazioneViewModel(InviaSegnalazioneUseCase(FakeSegnalazioneRepository()))
+
         composeTestRule.setContent {
-            SegnalazioneScreen(viewModel = SegnalazioneViewModel())
+            SegnalazioneScreen(viewModel = viewModel)
         }
 
-        composeTestRule.onNodeWithText("Titolo").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Descrizione").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Categoria").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Seleziona foto").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Ottieni posizione").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Invia").assertIsDisplayed()
+        composeTestRule.onNodeWithText(activity.getString(R.string.title)).assertIsDisplayed()
+        composeTestRule.onNodeWithText(activity.getString(R.string.description)).assertIsDisplayed()
+        composeTestRule.onNodeWithText(activity.getString(R.string.category)).assertIsDisplayed()
+        composeTestRule.onNodeWithText(activity.getString(R.string.select_photo)).assertIsDisplayed()
+        composeTestRule.onNodeWithText(activity.getString(R.string.get_location)).assertIsDisplayed()
+        composeTestRule.onNodeWithText(activity.getString(R.string.send)).assertIsDisplayed()
     }
 
     @Test
-    fun sendActionShowsConfirmationSnackbar() {
+    fun sendWithMissingRequiredFieldsShowsValidationMessage() {
+        val viewModel = SegnalazioneViewModel(InviaSegnalazioneUseCase(FakeSegnalazioneRepository()))
+
         composeTestRule.setContent {
-            SegnalazioneScreen(viewModel = SegnalazioneViewModel())
+            SegnalazioneScreen(viewModel = viewModel)
         }
 
-        composeTestRule.onAllNodes(hasSetTextAction())[0].performTextInput("Lampione guasto")
-        composeTestRule.onAllNodes(hasSetTextAction())[1].performTextInput("Via Roma")
-        composeTestRule.onNodeWithText("Invia").performClick()
+        composeTestRule.onNodeWithText(composeTestRule.activity.getString(R.string.send)).performClick()
+
+        composeTestRule.onNodeWithText("Titolo e categoria sono obbligatori").assertExists()
+    }
+
+    @Test
+    fun sendWithValidDataShowsSuccessSnackbar() {
+        val activity = composeTestRule.activity
+        val viewModel = SegnalazioneViewModel(InviaSegnalazioneUseCase(FakeSegnalazioneRepository()))
+        viewModel.onCategoriaChange(activity.getString(R.string.report_category_safety))
+
+        composeTestRule.setContent {
+            SegnalazioneScreen(viewModel = viewModel)
+        }
+
+        composeTestRule.onNodeWithText(activity.getString(R.string.title)).performTextInput("Lampione")
+        composeTestRule.onNodeWithText(activity.getString(R.string.send)).performClick()
 
         composeTestRule.onNodeWithText("Segnalazione inviata").assertExists()
+    }
+
+    private class FakeSegnalazioneRepository : SegnalazioneRepository {
+        override fun observeSegnalazioni(): Flow<List<Segnalazione>> = emptyFlow()
+
+        override suspend fun inviaSegnalazione(input: SegnalazioneInput): Result<Unit> = Result.success(Unit)
+
+        override suspend fun seedSegnalazioniIfEmpty() = Unit
     }
 }
