@@ -64,7 +64,8 @@ import it.quartierevivo.ui.theme.VerdeOliva
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MappaSegnalazioniScreen(
-    viewModel: MappaSegnalazioniViewModel = viewModel()
+    viewModel: MappaSegnalazioniViewModel = viewModel(),
+    onLogoutClick: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val segnalazioni by viewModel.segnalazioniFiltrate.collectAsState()
@@ -151,7 +152,7 @@ fun MappaSegnalazioniScreen(
                 IconButton(onClick = { expanded = !expanded }) {
                     Icon(Icons.Default.FilterList, contentDescription = "Filtri", tint = VerdeOliva)
                 }
-                IconButton(onClick = { /* Logout */ }) {
+                IconButton(onClick = onLogoutClick) {
                     Icon(Icons.Default.ExitToApp, contentDescription = "Logout", tint = VerdeOliva)
                 }
             }
