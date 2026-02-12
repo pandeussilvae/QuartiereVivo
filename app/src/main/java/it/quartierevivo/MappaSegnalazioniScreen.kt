@@ -12,6 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Policy
 import androidx.compose.material.icons.filled.Report
 import androidx.compose.material3.Button
@@ -40,6 +41,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
+import androidx.core.graphics.drawable.toBitmap
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
@@ -83,6 +87,8 @@ import kotlinx.coroutines.tasks.await
 @Composable
 fun MappaSegnalazioniScreen(
     viewModel: MappaSegnalazioniViewModel = viewModel(),
+    onOpenDetails: (String) -> Unit,
+    onOpenPreferences: () -> Unit,
     onDettaglioClick: (String) -> Unit = {}
     onLogoutClick: () -> Unit = {}
     viewModel: MappaSegnalazioniViewModel,
@@ -95,6 +101,8 @@ fun MappaSegnalazioniScreen(
     val isLoading by viewModel.isLoading.collectAsState()
     val errore by viewModel.errore.collectAsState()
 
+    val avgLat = segnalazioni.map { it.latitudine }.averageOrNull() ?: 0.0
+    val avgLng = segnalazioni.map { it.longitudine }.averageOrNull() ?: 0.0
     // Calculate average position
     val avgLat = segnalazioni.map { it.lat }.averageOrNull() ?: 0.0
     val avgLng = segnalazioni.map { it.lng }.averageOrNull() ?: 0.0
@@ -164,7 +172,9 @@ fun MappaSegnalazioniScreen(
                     ) {
                         Column(Modifier.padding(8.dp)) {
                             Text(text = item.titolo)
+                            Text(text = "Stato: ${item.status}")
                             Spacer(Modifier.height(4.dp))
+                            Button(onClick = { onOpenDetails(item.id) }) {
                             Button(onClick = { onDettaglioClick(item.id) }) {
                                 Text("Dettagli")
                             Button(onClick = { viewModel.tracciaAperturaDettaglio(item.id) }) {
@@ -220,12 +230,16 @@ fun MappaSegnalazioniScreen(
             }
 
             Row(modifier = Modifier.align(Alignment.BottomCenter).padding(8.dp)) {
-                IconButton(onClick = { /* Home */ }) {
+                IconButton(onClick = { }) {
                     Icon(Icons.Default.Home, contentDescription = "Home", tint = VerdeOliva)
                 }
                 IconButton(onClick = { expanded = !expanded }) {
                     Icon(Icons.Default.FilterList, contentDescription = "Filtri", tint = VerdeOliva)
                 }
+                IconButton(onClick = onOpenPreferences) {
+                    Icon(Icons.Default.Notifications, contentDescription = "Preferenze notifiche", tint = VerdeOliva)
+                }
+                IconButton(onClick = { }) {
                 IconButton(onClick = onLogoutClick) {
                     Icon(Icons.Default.ExitToApp, contentDescription = "Logout", tint = VerdeOliva)
             Surface(
@@ -265,6 +279,7 @@ fun MappaSegnalazioniScreen(
                                 myLocation = LatLng(location.latitude, location.longitude)
                                 cameraPositionState.position = cameraPositionState.position.copy(target = myLocation!!)
                             }
+                        } catch (_: Exception) {
                         } catch (exception: Exception) {
                             Firebase.crashlytics.recordException(exception)
                         }

@@ -50,6 +50,8 @@ class MappaSegnalazioniViewModel : ViewModel() {
         _categoriaFiltro.value = categoria
     }
 
+    fun getSegnalazioneById(id: String): Segnalazione? {
+        return _segnalazioni.value.firstOrNull { it.id == id }
     fun getSegnalazioneById(id: String): Segnalazione? =
         _segnalazioni.value.firstOrNull { it.id == id }
 
