@@ -1,6 +1,6 @@
 package it.quartierevivo.domain.usecase
 
-import it.quartierevivo.Segnalazione
+import it.quartierevivo.domain.model.Segnalazione
 
 class FilterSegnalazioniByCategoriaUseCase {
     operator fun invoke(
