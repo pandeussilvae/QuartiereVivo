@@ -1,0 +1,101 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function hasClaim(role) {
+      return isSignedIn() && request.auth.token[role] == true;
+    }
+
+    function hasRoleDoc(role) {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/roles/$(request.auth.uid))
+        && get(/databases/$(database)/documents/roles/$(request.auth.uid)).data.role == role;
+    }
+
+    function isAdmin() {
+      return hasClaim('admin') || hasRoleDoc('admin');
+    }
+
+    function isModerator() {
+      return isAdmin() || hasClaim('moderator') || hasRoleDoc('moderator');
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function hasOnlyAllowedReportKeys() {
+      return request.resource.data.keys().hasOnly([
+        'ownerId',
+        'title',
+        'description',
+        'category',
+        'imagePath',
+        'lat',
+        'lng',
+        'status',
+        'createdAt',
+        'updatedAt',
+        'moderationNote',
+        'updatedBy'
+      ]);
+    }
+
+    function isValidInitialStatus() {
+      return request.resource.data.status in ['open', 'pending'];
+    }
+
+    function ownerCanUpdateOwnReport() {
+      return request.resource.data.ownerId == resource.data.ownerId
+        && request.resource.data.status == resource.data.status
+        && request.resource.data.updatedBy == resource.data.updatedBy
+        && request.resource.data.createdAt == resource.data.createdAt;
+    }
+
+    function moderatorCanChangeStatusOnly() {
+      return request.resource.data.ownerId == resource.data.ownerId
+        && request.resource.data.title == resource.data.title
+        && request.resource.data.description == resource.data.description
+        && request.resource.data.category == resource.data.category
+        && request.resource.data.imagePath == resource.data.imagePath
+        && request.resource.data.lat == resource.data.lat
+        && request.resource.data.lng == resource.data.lng
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.status in ['open', 'pending', 'in_progress', 'resolved', 'rejected']
+        && request.resource.data.updatedBy == request.auth.uid;
+    }
+
+    // Optional profile documents for users.
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create, update, delete: if isOwner(userId) || isAdmin();
+    }
+
+    // Custom role mapping: { role: "admin" | "moderator" }
+    match /roles/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Reports/segnalazioni.
+    match /reports/{reportId} {
+      allow read: if isSignedIn();
+
+      allow create: if isSignedIn()
+        && hasOnlyAllowedReportKeys()
+        && request.resource.data.ownerId == request.auth.uid
+        && isValidInitialStatus()
+        && request.resource.data.updatedBy == request.auth.uid;
+
+      allow update: if hasOnlyAllowedReportKeys() && (
+        (isOwner(resource.data.ownerId) && ownerCanUpdateOwnReport())
+        || (isModerator() && moderatorCanChangeStatusOnly())
+      );
+
+      allow delete: if isOwner(resource.data.ownerId) || isAdmin();
+    }
+  }
+}

@@ -1,0 +1,34 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function hasClaim(role) {
+      return isSignedIn() && request.auth.token[role] == true;
+    }
+
+    function isAdminOrModerator() {
+      return hasClaim('admin') || hasClaim('moderator');
+    }
+
+    function isReportOwner(reportId) {
+      return isSignedIn()
+        && exists(/databases/(default)/documents/reports/$(reportId))
+        && get(/databases/(default)/documents/reports/$(reportId)).data.ownerId == request.auth.uid;
+    }
+
+    // Files attached to reports/segnalazioni.
+    match /reports/{reportId}/{fileName} {
+      allow read: if isSignedIn() && (isReportOwner(reportId) || isAdminOrModerator());
+      allow write: if isSignedIn() && (isReportOwner(reportId) || isAdminOrModerator());
+      allow delete: if isSignedIn() && (isReportOwner(reportId) || hasClaim('admin'));
+    }
+
+    // Optional user-private area.
+    match /users/{userId}/{allPaths=**} {
+      allow read, write: if isSignedIn() && (request.auth.uid == userId || hasClaim('admin'));
+    }
+  }
+}
