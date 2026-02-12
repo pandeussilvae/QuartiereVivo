@@ -1,5 +1,10 @@
 package it.quartierevivo
 
+@Deprecated(
+    message = "Usare it.quartierevivo.presentation.segnalazione.SegnalazioneViewModel",
+    replaceWith = ReplaceWith("it.quartierevivo.presentation.segnalazione.SegnalazioneViewModel"),
+)
+typealias SegnalazioneViewModel = it.quartierevivo.presentation.segnalazione.SegnalazioneViewModel
 import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -12,6 +17,10 @@ import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.util.UUID
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.analytics.ktx.analytics
+import com.google.firebase.analytics.ktx.logEvent
+import com.google.firebase.ktx.Firebase
 
 class SegnalazioneViewModel : ViewModel() {
     var titolo by mutableStateOf("")
@@ -101,6 +110,11 @@ class SegnalazioneViewModel : ViewModel() {
 
     fun dismissErrore() {
         erroreInvio = null
+        Firebase.analytics.logEvent("submit_report") {
+            param(FirebaseAnalytics.Param.ITEM_CATEGORY, categoria)
+            param(FirebaseAnalytics.Param.ITEM_NAME, titolo)
+        }
+        invioConfermato = true
     }
 
     fun resetConferma() {
