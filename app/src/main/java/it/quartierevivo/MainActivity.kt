@@ -36,6 +36,7 @@ import it.quartierevivo.presentation.mappa.MappaSegnalazioniViewModel
 import it.quartierevivo.presentation.notification.NotificationPreferencesScreen
 import it.quartierevivo.presentation.notification.NotificationPreferencesViewModel
 import it.quartierevivo.presentation.notification.NotificationPreferencesViewModelFactory
+import it.quartierevivo.presentation.segnalazione.SegnalazioneViewModel
 import it.quartierevivo.ui.theme.QuartiereVivoTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -78,6 +79,7 @@ class MainActivity : ComponentActivity() {
 
                 val mappaUiState by mappaSegnalazioniViewModel.uiState.collectAsState()
                 val segnalazioni = (mappaUiState as? UiState.Success)?.data.orEmpty()
+                val segnalazioneViewModel: SegnalazioneViewModel = viewModel(factory = appViewModelFactory)
 
                 LaunchedEffect(pendingDeepLink) {
                     pendingDeepLink?.let { id ->
@@ -90,9 +92,17 @@ class MainActivity : ComponentActivity() {
                     composable("mappa") {
                         MappaSegnalazioniScreen(
                             viewModel = mappaSegnalazioniViewModel,
-                            onOpenDetails = { id -> navController.navigate("dettaglio/$id") },
+                            onDettaglioClick = { id -> navController.navigate("dettaglio/$id") },
+                            onLogoutClick = {
+                                FirebaseAuth.getInstance().signOut()
+                                navController.navigate("mappa")
+                            },
                             onOpenPreferences = { navController.navigate("preferenze_notifiche") },
+                            onOpenReportForm = { navController.navigate("segnalazione") },
                         )
+                    }
+                    composable("segnalazione") {
+                        SegnalazioneScreen(viewModel = segnalazioneViewModel)
                     }
                     composable(
                         route = "dettaglio/{segnalazioneId}",

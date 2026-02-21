@@ -29,4 +29,12 @@
     <string name="sample_report_danger">Unsafe area</string>
     <string name="send_report">Send report</string>
     <string name="open_report_form">Open report form</string>
+    <string name="open_preferences">Open preferences</string>
+    <string name="reports_title">Reports</string>
+    <string name="reports_loading">Loading reports…</string>
+    <string name="reports_empty">No reports available</string>
+    <string name="report_row_title">%1$s · %2$s</string>
+    <string name="detected_position">Detected position: %1$s</string>
+    <string name="sending">Sending...</string>
+    <string name="location_unavailable">Unable to get current location</string>
 </resources>
