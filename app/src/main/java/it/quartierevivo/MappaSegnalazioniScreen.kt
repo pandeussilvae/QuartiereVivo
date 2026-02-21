@@ -4,17 +4,23 @@ import androidx.compose.runtime.Composable
 
 @Deprecated(
     message = "Usare it.quartierevivo.presentation.mappa.MappaSegnalazioniScreen",
-    replaceWith = ReplaceWith("it.quartierevivo.presentation.mappa.MappaSegnalazioniScreen(viewModel, onOpenDetails, onOpenPreferences)"),
+    replaceWith = ReplaceWith(
+        "it.quartierevivo.presentation.mappa.MappaSegnalazioniScreen(viewModel, onDettaglioClick, onLogoutClick, onOpenPreferences, onOpenReportForm)",
+    ),
 )
 @Composable
 fun MappaSegnalazioniScreen(
     viewModel: it.quartierevivo.presentation.mappa.MappaSegnalazioniViewModel,
-    onOpenDetails: (String) -> Unit,
+    onDettaglioClick: (String) -> Unit,
+    onLogoutClick: () -> Unit,
     onOpenPreferences: () -> Unit,
+    onOpenReportForm: () -> Unit,
 ) {
     it.quartierevivo.presentation.mappa.MappaSegnalazioniScreen(
         viewModel = viewModel,
-        onOpenDetails = onOpenDetails,
+        onDettaglioClick = onDettaglioClick,
+        onLogoutClick = onLogoutClick,
         onOpenPreferences = onOpenPreferences,
+        onOpenReportForm = onOpenReportForm,
     )
 }

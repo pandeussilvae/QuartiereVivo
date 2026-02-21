@@ -29,4 +29,12 @@
     <string name="sample_report_danger">Area pericolosa</string>
     <string name="send_report">Invia segnalazione</string>
     <string name="open_report_form">Apri form segnalazione</string>
+    <string name="open_preferences">Apri preferenze</string>
+    <string name="reports_title">Segnalazioni</string>
+    <string name="reports_loading">Caricamento segnalazioni…</string>
+    <string name="reports_empty">Nessuna segnalazione disponibile</string>
+    <string name="report_row_title">%1$s · %2$s</string>
+    <string name="detected_position">Posizione rilevata: %1$s</string>
+    <string name="sending">Invio...</string>
+    <string name="location_unavailable">Impossibile ottenere la posizione corrente</string>
 </resources>
